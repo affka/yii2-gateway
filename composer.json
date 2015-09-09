@@ -1,0 +1,21 @@
+{
+    "name": "affka/yii2-gateway",
+    "description": "Universal Api for payment systems",
+    "keywords": ["yii2", "payment", "api"],
+    "license": "MIT",
+    "type": "yii2-extension",
+    "authors": [
+        {
+            "name": "Kozhin Vladimir",
+            "email": "affka@affka.ru"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "gateway\\": ""
+        }
+    }
+}

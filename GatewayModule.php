@@ -3,6 +3,7 @@
 namespace gateway;
 
 use gateway\components\IStateSaver;
+use gateway\enums\State;
 use gateway\exceptions\NotFoundGatewayException;
 use gateway\gateways\Base;
 use gateway\models\Process;
@@ -10,6 +11,8 @@ use gateway\models\Request;
 use yii\base\Module;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Inflector;
+use yii\helpers\Url;
+use yii\web\Application;
 use yii\web\Controller;
 
 class GatewayModule extends Module
@@ -22,7 +25,7 @@ class GatewayModule extends Module
     /**
      * @event ProcessEvent
      */
-    const EVENT_CHECK = 'check';
+    const EVENT_CALLBACK = 'callback';
 
     /**
      * @event ProcessEvent
@@ -55,6 +58,21 @@ class GatewayModule extends Module
     public $logFilePath = '@runtime/gateway.log';
 
     /**
+     * @var string
+     */
+    public $siteUrl = '';
+
+    /**
+     * @var string
+     */
+    public $successUrl = ['/gateway/gateway/success'];
+
+    /**
+     * @var string
+     */
+    public $failureUrl = ['/gateway/gateway/success'];
+
+    /**
      * @return \gateway\GatewayModule
      */
     public static function getInstance() {
@@ -63,6 +81,15 @@ class GatewayModule extends Module
 
     public function init() {
         parent::init();
+
+        if (\Yii::$app instanceof \yii\base\Application) {
+            $this->siteUrl = $this->siteUrl ? Url::to($this->siteUrl, true) : \Yii::$app->homeUrl;
+            $this->successUrl = Url::to($this->successUrl, true);
+            $this->failureUrl = Url::to($this->failureUrl, true);
+        } else {
+            $this->successUrl = is_array($this->successUrl) ? $this->successUrl[0] : $this->successUrl;
+            $this->failureUrl = is_array($this->failureUrl) ? $this->failureUrl[0] : $this->failureUrl;
+        }
 
         $coreComponents = $this->coreComponents();
         foreach ($coreComponents as $id => $config) {
@@ -90,12 +117,13 @@ class GatewayModule extends Module
         }
 
         // Lazy create
-        if (empty($this->gateways[$name]['class'])) {
-            $this->gateways[$name]['class'] = $this->getGatewayClassByName($name);
-        }
-        $this->gateways[$name]['name'] = $name;
-        $this->gateways[$name]['module'] = $this;
-        $this->gateways[$name] = \Yii::createObject($this->gateways[$name]);
+        $this->gateways[$name] = \Yii::createObject(array_merge($this->gateways[$name], [
+            'name' => $name,
+            'module' => $this,
+            'class' => isset($this->gateways[$name]['class']) ?
+                $this->gateways[$name]['class'] :
+                $this->getGatewayClassByName($name),
+        ]));
 
         return $this->gateways[$name];
     }
@@ -143,21 +171,21 @@ class GatewayModule extends Module
      * @return models\Process
      * @throws \Exception
      */
-    public function check($gatewayName, Request $request) {
-        $this->log('Check transaction', 'log', null, [
+    public function callback($gatewayName, Request $request) {
+        $this->log('Callback transaction', 'log', null, [
             'gatewayName' => $gatewayName,
             'request' => $request,
         ]);
 
         try {
-            $process = $this->getGateway($gatewayName)->check($request);
-            $this->trigger(self::EVENT_CHECK, new ProcessEvent([
+            $process = $this->getGateway($gatewayName)->callback($request);
+            $this->trigger(self::EVENT_CALLBACK, new ProcessEvent([
                 'request' => $request,
                 'process' => $process,
             ]));
         } catch (\Exception $e) {
             $id = isset($process) ? $process->transactionId : null;
-            $this->log('Failed on check transaction: ' . ((string) $e), 'error', $id, [
+            $this->log('Failed on callback transaction: ' . ((string) $e), 'error', $id, [
                 'gatewayName' => $gatewayName,
                 'request' => $request,
                 'exception' => $e,
@@ -165,39 +193,15 @@ class GatewayModule extends Module
             throw $e;
         }
 
-        return $process;
-    }
-
-    /**
-     * @param string $gatewayName
-     * @param boolean $isSuccess
-     * @param Request $request
-     * @return models\Process
-     * @throws \Exception
-     */
-    public function end($gatewayName, $isSuccess, Request $request) {
-        $this->log('End transaction', 'log', null, [
-            'gatewayName' => $gatewayName,
-            'isSuccess' => $isSuccess,
-            'request' => $request,
-        ]);
-
-        try {
-            $process = $this->getGateway($gatewayName)->end($isSuccess, $request);
-            $this->trigger(self::EVENT_END, new ProcessEvent([
-                'request' => $request,
-                'process' => $process,
-            ]));
-        } catch (\Exception $e) {
-            $id = isset($process) ? $process->transactionId : null;
-            $this->log('Failed on check transaction: ' . ((string) $e), 'error', $id, [
-                'gatewayName' => $gatewayName,
-                'isSuccess' => $isSuccess,
-                'request' => $request,
-                'exception' => $e,
-            ]);
-            throw $e;
+        switch ($process->state) {
+            case State::COMPLETE:
+            case State::COMPLETE_VERIFY:
+                $this->trigger(self::EVENT_END, new ProcessEvent([
+                    'request' => $request,
+                    'process' => $process,
+                ]));
         }
+
         return $process;
     }
 
@@ -221,7 +225,8 @@ class GatewayModule extends Module
             "Date: " . date('Y-m-d H:i:s') . "\n" .
             "Level: " . $level . "\n" .
             "Transaction: " . $transactionId . "\n" .
-            "State: " . var_export($stateData, true) . "\n";
+            "State: " . print_r($stateData, true) . "\n\n" .
+            "------------------------------------------\n\n";
         file_put_contents(\Yii::getAlias($this->logFilePath), $message, FILE_APPEND);
 
         $this->trigger(self::EVENT_LOG, new LogEvent([

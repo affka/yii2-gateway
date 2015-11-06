@@ -52,7 +52,7 @@ class RobokassaTest extends \PHPUnit_Framework_TestCase {
         echo $startLink;
 
         // Check
-        $process = $gateway->check(new Request([
+        $process = $gateway->callback(new Request([
             'method' => 'get',
             'url' => 'http://mysite.com/gateway/default/check?gatewayName=robokassa',
             'params' => [
@@ -71,11 +71,6 @@ class RobokassaTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('complete', $process->state);
         $this->assertEquals('succeed', $process->result);
         $this->assertEquals('OK' . $id, $process->responseText);
-
-        // End
-        $process = $gateway->end(false, new Request());
-        $this->assertEquals('complete', $process->state);
-        $this->assertEquals('failed', $process->result);
     }
 
 }

@@ -119,23 +119,13 @@ class PayPal extends Base {
 		return $processModel;
 	}
 
-    /**
-     * @param Request $requestModel
-     * @return void
-     * @throws UnsupportedStateMethodException
-     */
-    public function check(Request $requestModel) {
-        throw new UnsupportedStateMethodException();
-    }
-
 	/**
-	 * @param string $result
 	 * @param \gateway\models\Request $request
 	 * @return \gateway\models\Process
 	 * @throws \gateway\exceptions\ProcessException
 	 * @throws \gateway\exceptions\InvalidArgumentException
 	 */
-	public function end($result, Request $request) {
+	public function callback(Request $request) {
 		if (!isset($request->params['token']) || !isset($request->params['PayerID'])) {
 			throw new InvalidArgumentException('Invalid request arguments. Need `token` and `PayerID`.');
 		}
@@ -179,10 +169,10 @@ class PayPal extends Base {
         ]);
 	}
 
-	/**
-	 * @return object
-	 * @throws \gateway\exceptions\ProcessException
-	 */
+    /**
+     * @return mixed|null
+     * @throws ProcessException
+     */
 	private function getAuthData() {
 		// Send auth request
 		$authResponseData = $this->httpSend($this->apiUrl . '/v1/oauth2/token', array(

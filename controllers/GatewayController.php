@@ -7,7 +7,7 @@ use gateway\models\Request;
 use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 
-class DefaultController extends Controller {
+class GatewayController extends Controller {
 
     public $enableCsrfValidation = false; // @todo Only for first time..
 
@@ -20,17 +20,24 @@ class DefaultController extends Controller {
         }
     }
 
-    public function actionCheck($gatewayName) {
-        $process = GatewayModule::getInstance()->check($gatewayName, $this->getRequest());
+    public function actionCallback($gatewayName) {
+        $process = GatewayModule::getInstance()->callback($gatewayName, $this->getRequest());
         echo $process->responseText;
     }
 
     public function actionSuccess($gatewayName) {
-        GatewayModule::getInstance()->end($gatewayName, true, $this->getRequest());
+        $error = \Yii::$app->request->get('error');
+        if ($error) {
+            return $error;
+        }
+        // @todo
+        return $this->redirect(\Yii::$app->homeUrl);
+        //GatewayModule::getInstance()->end($gatewayName, true, $this->getRequest());
     }
 
     public function actionFailure($gatewayName) {
-        GatewayModule::getInstance()->end($gatewayName, false, $this->getRequest());
+        // @todo
+        //GatewayModule::getInstance()->end($gatewayName, false, $this->getRequest());
     }
 
     /**

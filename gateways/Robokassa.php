@@ -76,7 +76,7 @@ class Robokassa extends Base {
      * @throws InvalidArgumentException
      * @throws SignatureMismatchRequestException
      */
-	public function check(Request $request) {
+	public function callback(Request $request) {
 		// Check required params
 		if (empty($request->params['InvId']) || empty($request->params['SignatureValue'])) {
             throw new InvalidArgumentException('Invalid request arguments. Need `InvId` and `SignatureValue`.');
@@ -104,15 +104,4 @@ class Robokassa extends Base {
         ]);
 	}
 
-	/**
-	 * @param boolean $isSuccess
-	 * @param Request $request
-	 * @return Process
-	 */
-	public function end($isSuccess, Request $request) {
-		return new Process([
-            'state' => State::COMPLETE,
-            'result' => $isSuccess ? Result::SUCCEED : Result::FAILED,
-        ]);
-	}
 }

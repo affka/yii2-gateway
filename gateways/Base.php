@@ -56,21 +56,22 @@ abstract class Base extends Object {
 	 * @param Request $request
 	 * @return \gateway\models\Process
 	 */
-	abstract public function check(Request $request);
+	abstract public function callback(Request $request);
 
-	/**
-	 * @param string $result
-     * @param Request $request
-	 * @return \gateway\models\Process
-	 */
-	abstract public function end($result, Request $request);
+    /**
+     * Адрес магазина/сайта
+     * @return string
+     */
+    public function getSiteUrl() {
+        return self::appendToUrl($this->module->siteUrl, 'gatewayName=' . $this->name);
+    }
 
 	/**
 	 * Адрес, по которому должна направить пользователя платёжная система при успешной оплате
 	 * @return string
 	 */
 	public function getSuccessUrl() {
-		return $this->module->getSuccessUrl($this->getName());
+        return self::appendToUrl($this->module->successUrl, 'gatewayName=' . $this->name);
 	}
 
 	/**
@@ -78,16 +79,21 @@ abstract class Base extends Object {
 	 * @return string
 	 */
 	public function getFailureUrl() {
-		return $this->module->getFailureUrl($this->getName());
+        return self::appendToUrl($this->module->failureUrl, 'gatewayName=' . $this->name);
 	}
 
-	/**
-	 * Отсылает сообщения лога для записи его в БД
-	 * @param string $message
-	 * @param array $stateData
-	 */
+    protected static function appendToUrl($url, $query) {
+        return $url . (strpos($url, '?') === false ? '?' : '&') . $query;
+    }
+
+    /**
+     * @param $message
+     * @param string $level
+     * @param null $transactionId
+     * @param array $stateData
+     */
 	protected function log($message, $level= 'log', $transactionId = null, $stateData = array()) {
-		//GatewaysModule::findInstance()->api->log($message, $level, $transactionId, $stateData);
+		$this->module->log($message, $level, $transactionId, $stateData);
 	}
 
     /**
@@ -107,6 +113,6 @@ abstract class Base extends Object {
     }
 
 	protected function httpSend($url, $params = [], $headers = []) {
-        $this->module->httpSend($url, $params, $headers);
+        return $this->module->httpSend($url, $params, $headers);
 	}
 }

@@ -27,22 +27,12 @@ class Manual extends Base {
 
 	/**
 	 * @param Request $requestModel
-	 * @return void
-	 * @throws UnsupportedStateMethodException
-	 */
-	public function check(Request $requestModel) {
-		throw new UnsupportedStateMethodException();
-	}
-
-	/**
-	 * @param string $result
-	 * @param Request $requestModel
 	 * @return Process
 	 */
-	public function end($result, Request $requestModel) {
+	public function callback(Request $requestModel) {
 		return new Process([
             'state' => State::COMPLETE,
-            'result' => $result,
+            'result' => $requestModel->params['result'],
         ]);
 	}
 

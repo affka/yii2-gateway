@@ -1,6 +1,6 @@
 {
     "name": "affka/yii2-gateway",
-    "version":"1.0.0",
+    "version":"1.1.0",
     "description": "Universal Api for payment systems",
     "keywords": ["yii2", "payment", "api"],
     "license": "MIT",

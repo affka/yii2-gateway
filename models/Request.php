@@ -4,18 +4,37 @@ namespace gateway\models;
 
 use yii\base\Object;
 
-class Request extends Object {
+class Request extends Object
+{
 
     public $url;
     public $method = 'get';
     public $params = [];
 
-    public function __toString() {
+    /**
+     * @param array|string $params
+     * @return bool
+     */
+    public function hasParams($params) {
+        if (!is_array($params)) {
+            $params = [$params];
+        }
+
+        foreach ($params as $param) {
+            if (!isset($this->params[$param])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function __toString()
+    {
         $link = new Link($this->url);
         if ($this->method === 'get') {
             $link->parameters = $this->params;
         }
-        return (string) $link;
+        return (string)$link;
     }
 
 }

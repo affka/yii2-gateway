@@ -1,25 +1,28 @@
 <?php
 
 namespace gateway\models;
+
 use yii\base\Object;
 
 /**
  * Модель для парсинга и формирования ссылки
- * 
- * @author affka 
+ *
+ * @author affka
  */
-class Link extends Object {
-	
-	public $protocol;
-	public $source;
-	public $domain;
-	public $host;
-	public $path;
-	public $parameters = array();
-	public $hash;
-	public $hashParameters = array();
-	
-	public function __construct($config = '') {
+class Link extends Object
+{
+
+    public $protocol;
+    public $source;
+    public $domain;
+    public $host;
+    public $path;
+    public $parameters = array();
+    public $hash;
+    public $hashParameters = array();
+
+    public function __construct($config = '')
+    {
         if (is_string($config)) {
             preg_match('/((https?:\/\/www\.)|(https?:\/\/)|(www\.))([^\/\n\r\t\"\' ]+)([^\?\n\r\t\"\'\# ]*)\??([^\n\r\t\"\'\# ]*)\#?([^\n\r\t\"\' ]*)/iu', $config, $match);
 
@@ -38,65 +41,76 @@ class Link extends Object {
         }
 
         parent::__construct($config);
-	}
+    }
 
-	public function hasParam($name) {
-		return array_key_exists($name, $this->parameters) !== false;
-	}
+    public function hasParam($name)
+    {
+        return array_key_exists($name, $this->parameters) !== false;
+    }
 
-	public function getParam($name) {
-		return $this->hasParam($name) ? $this->parameters[$name] : null;
-	}
+    public function getParam($name)
+    {
+        return $this->hasParam($name) ? $this->parameters[$name] : null;
+    }
 
-	public function setParam($name, $value) {
-		$this->parameters[$name] = $value;
-	}
+    public function setParam($name, $value)
+    {
+        $this->parameters[$name] = $value;
+    }
 
-	public function setParams(array $params) {
-		$this->parameters = array_merge($this->parameters, $params);
-	}
+    public function setParams(array $params)
+    {
+        $this->parameters = array_merge($this->parameters, $params);
+    }
 
-	public function hasHashParam($name) {
-		return array_key_exists($name, $this->hashParameters);
-	}
+    public function hasHashParam($name)
+    {
+        return array_key_exists($name, $this->hashParameters);
+    }
 
-	public function getHashParam($name) {
-		return $this->hasHashParam($name) ? $this->hashParameters[$name] : null;
-	}
+    public function getHashParam($name)
+    {
+        return $this->hasHashParam($name) ? $this->hashParameters[$name] : null;
+    }
 
-	public function setHashParam($name, $value) {
-		$this->hashParameters[$name] = $value;
-	}
+    public function setHashParam($name, $value)
+    {
+        $this->hashParameters[$name] = $value;
+    }
 
-	public function setHashParams(array $params) {
-		$this->hashParameters = array_merge($this->hashParameters, $params);
-	}
-	
-	public function __toString() {
-		$link = $this->protocol.'://';
-		$link .= $this->host;
-		$link .= $this->path;
-		
-		$stringParameters = $this->parametersToString($this->parameters);
-		if ($stringParameters) {
-			$link .= '?'.$stringParameters;
-		}
-		
-		return $link;
-	}
-	
-	private function stringToParameters($parametersString) {
-		$parameters = array();
-		foreach (explode('&', $parametersString) as $paramString) {
-			$paramArr = explode('=', $paramString);
-			if (count($paramArr) === 2) {
-				$parameters[$paramArr[0]] = $paramArr[1];
-			}
-		}
-		return $parameters;
-	}
-	
-	private function parametersToString($parameters) {
-		return http_build_query($parameters);
-	}
+    public function setHashParams(array $params)
+    {
+        $this->hashParameters = array_merge($this->hashParameters, $params);
+    }
+
+    public function __toString()
+    {
+        $link = $this->protocol . '://';
+        $link .= $this->host;
+        $link .= $this->path;
+
+        $stringParameters = $this->parametersToString($this->parameters);
+        if ($stringParameters) {
+            $link .= '?' . $stringParameters;
+        }
+
+        return $link;
+    }
+
+    private function stringToParameters($parametersString)
+    {
+        $parameters = array();
+        foreach (explode('&', $parametersString) as $paramString) {
+            $paramArr = explode('=', $paramString);
+            if (count($paramArr) === 2) {
+                $parameters[$paramArr[0]] = $paramArr[1];
+            }
+        }
+        return $parameters;
+    }
+
+    private function parametersToString($parameters)
+    {
+        return http_build_query($parameters);
+    }
 }

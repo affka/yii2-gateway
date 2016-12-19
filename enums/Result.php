@@ -6,8 +6,8 @@ namespace gateway\enums;
  * Результат обработки события в платёжной системе
  * @author Vladimir Kozhin <affka@affka.ru>
  */
-abstract class Result {
-
+abstract class Result
+{
     /**
      * Платежное поручение, поданное платежной системой в нашу на проверку, не подтверждено
      */

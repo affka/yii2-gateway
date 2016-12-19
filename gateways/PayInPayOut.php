@@ -9,7 +9,8 @@ use gateway\exceptions\SignatureMismatchRequestException;
 use gateway\models\Process;
 use gateway\models\Request;
 
-class PayInPayOut extends Base {
+class PayInPayOut extends Base
+{
 
     const CURRENCY_RUR = 'RUR';
     const CURRENCY_EUR = 'EUR';
@@ -44,29 +45,30 @@ class PayInPayOut extends Base {
     /**
      * @var string
      */
-	public $agentId;
+    public $agentId;
 
     /**
      * @var string
      */
-	public $agentName = '';
+    public $agentName = '';
 
     /**
      * @var string
      */
-	public $secretKey;
+    public $secretKey;
 
     /**
      * @var string
      */
-	public $currency = self::CURRENCY_RUR;
+    public $currency = self::CURRENCY_RUR;
 
     /**
      * @var string
      */
-	public $preference = null;
+    public $preference = null;
 
-    public function init() {
+    public function init()
+    {
         parent::init();
 
         if (\Yii::$app instanceof \yii\base\Application) {
@@ -82,7 +84,8 @@ class PayInPayOut extends Base {
      * @return Process
      * @throws InvalidArgumentException
      */
-    public function start($id, $amount, $description, $params) {
+    public function start($id, $amount, $description, $params)
+    {
         $now = date('H:i:s d.m.Y', YII_BEGIN_TIME); // HH:mm:SS dd.MM.yyyy
 
         // Filter
@@ -117,7 +120,7 @@ class PayInPayOut extends Base {
                 ]),
             ]),
         ]);
-	}
+    }
 
     /**
      * @param Request $request
@@ -125,11 +128,12 @@ class PayInPayOut extends Base {
      * @throws InvalidArgumentException
      * @throws SignatureMismatchRequestException
      */
-	public function callback(Request $request) {
-		// Check required params
-		if (empty($request->params['agentId']) || empty($request->params['orderId']) || empty($request->params['sign'])) {
+    public function callback(Request $request)
+    {
+        // Check required params
+        if (empty($request->params['agentId']) || empty($request->params['orderId']) || empty($request->params['sign'])) {
             throw new InvalidArgumentException('Invalid request arguments.');
-		}
+        }
 
         if ($request->params['agentId'] != $this->agentId) {
             throw new InvalidArgumentException('Agent id is not valid.');
@@ -180,13 +184,15 @@ class PayInPayOut extends Base {
         }
 
         return $process;
-	}
+    }
 
-    protected static function normalizeAmount($value) {
+    protected static function normalizeAmount($value)
+    {
         return number_format($value, 2, '.', '');
     }
 
-    protected static function normalizePhone($value) {
+    protected static function normalizePhone($value)
+    {
         $value = preg_replace('/[^0-9]/', '', $value);
         $value = preg_replace('/^8/', '7', $value);
         return $value;

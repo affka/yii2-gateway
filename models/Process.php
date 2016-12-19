@@ -4,7 +4,8 @@ namespace gateway\models;
 
 use yii\base\Object;
 
-class Process extends Object {
+class Process extends Object
+{
 
     /**
      * Внутренний идентификатор транзакции (в БД)

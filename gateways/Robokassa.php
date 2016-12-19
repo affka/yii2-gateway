@@ -9,27 +9,28 @@ use gateway\exceptions\SignatureMismatchRequestException;
 use gateway\models\Process;
 use gateway\models\Request;
 
-class Robokassa extends Base {
+class Robokassa extends Base
+{
 
     /**
      * @var string
      */
-	public $login;
+    public $login;
 
     /**
      * @var string
      */
-	public $password1;
+    public $password1;
 
     /**
      * @var string
      */
-	public $password2;
+    public $password2;
 
     /**
      * @var string
      */
-	public $url;
+    public $url;
 
     /**
      * @param string $id
@@ -39,7 +40,8 @@ class Robokassa extends Base {
      * @return \gateway\models\Process
      * @throws \gateway\exceptions\ProcessException
      */
-    public function start($id, $amount, $description, $params) {
+    public function start($id, $amount, $description, $params)
+    {
         // Additional params
         $shpParams = [];
         $shpSignature = '';
@@ -68,7 +70,7 @@ class Robokassa extends Base {
                 ]),
             ])
         ]);
-	}
+    }
 
     /**
      * @param Request $request
@@ -76,32 +78,33 @@ class Robokassa extends Base {
      * @throws InvalidArgumentException
      * @throws SignatureMismatchRequestException
      */
-	public function callback(Request $request) {
-		// Check required params
-		if (empty($request->params['InvId']) || empty($request->params['SignatureValue'])) {
+    public function callback(Request $request)
+    {
+        // Check required params
+        if (empty($request->params['InvId']) || empty($request->params['SignatureValue'])) {
             throw new InvalidArgumentException('Invalid request arguments. Need `InvId` and `SignatureValue`.');
-		}
+        }
 
-		// Find transaction model
-		$transactionId = (int) $request->params['InvId'];
+        // Find transaction model
+        $transactionId = (int)$request->params['InvId'];
 
         // @todo check transaction exists
 
-		// Generate hash sum
-		$md5 = strtoupper(md5($request->params['OutSum'] . ':' . $transactionId . ':' . $this->password2));
-		$remoteMD5 = $request->params['SignatureValue'];
+        // Generate hash sum
+        $md5 = strtoupper(md5($request->params['OutSum'] . ':' . $transactionId . ':' . $this->password2));
+        $remoteMD5 = $request->params['SignatureValue'];
 
-		// Check md5 hash
-		if ($md5 !== $remoteMD5) {
-			throw new SignatureMismatchRequestException();
-		}
+        // Check md5 hash
+        if ($md5 !== $remoteMD5) {
+            throw new SignatureMismatchRequestException();
+        }
 
-		// Send success result
+        // Send success result
         return new Process([
             'state' => State::COMPLETE,
             'result' => Result::SUCCEED,
             'responseText' => 'OK' . $transactionId,
         ]);
-	}
+    }
 
 }

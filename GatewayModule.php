@@ -2,6 +2,7 @@
 
 namespace gateway;
 
+use gateway\components\IOrderInterface;
 use gateway\components\IStateSaver;
 use gateway\enums\State;
 use gateway\exceptions\NotFoundGatewayException;
@@ -10,8 +11,10 @@ use gateway\models\Process;
 use gateway\models\Request;
 use yii\base\Module;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 use yii\helpers\Inflector;
 use yii\helpers\Url;
+use yii\log\Logger;
 use yii\web\Application;
 use yii\web\Controller;
 
@@ -31,11 +34,6 @@ class GatewayModule extends Module
      * @event ProcessEvent
      */
     const EVENT_END = 'end';
-
-    /**
-     * @event ProcessEvent
-     */
-    const EVENT_LOG = 'log';
 
     /**
      * @var string
@@ -63,6 +61,11 @@ class GatewayModule extends Module
     public $siteUrl = '';
 
     /**
+     * @var IOrderInterface
+     */
+    public $orderClassName;
+
+    /**
      * @var string
      */
     public $successUrl = ['/gateway/gateway/success'];
@@ -82,7 +85,7 @@ class GatewayModule extends Module
     public function init() {
         parent::init();
 
-        if (\Yii::$app instanceof \yii\base\Application) {
+        if (\Yii::$app instanceof Application) {
             $this->siteUrl = $this->siteUrl ? Url::to($this->siteUrl, true) : \Yii::$app->homeUrl;
             $this->successUrl = Url::to($this->successUrl, true);
             $this->failureUrl = Url::to($this->failureUrl, true);
@@ -138,7 +141,7 @@ class GatewayModule extends Module
      * @throws \Exception
      */
     public function start($gatewayName, $id, $amount, $description = '', $params = []) {
-        $this->log('Start transaction', 'log', $id, [
+        $this->log('Start transaction', Logger::LEVEL_INFO, $id, [
             'gatewayName' => $gatewayName,
             'amount' => $amount,
             'description' => $description,
@@ -151,7 +154,7 @@ class GatewayModule extends Module
                 'process' => $process,
             ]));
         } catch (\Exception $e) {
-            $this->log('Failed on start transaction: ' . ((string) $e), 'error', $id, [
+            $this->log('Failed on start transaction: ' . ((string) $e), Logger::LEVEL_ERROR, $id, [
                 'gatewayName' => $gatewayName,
                 'amount' => $amount,
                 'description' => $description,
@@ -172,11 +175,6 @@ class GatewayModule extends Module
      * @throws \Exception
      */
     public function callback($gatewayName, Request $request) {
-        $this->log('Callback transaction', 'log', null, [
-            'gatewayName' => $gatewayName,
-            'request' => $request,
-        ]);
-
         try {
             $process = $this->getGateway($gatewayName)->callback($request);
             $this->trigger(self::EVENT_CALLBACK, new ProcessEvent([
@@ -185,13 +183,19 @@ class GatewayModule extends Module
             ]));
         } catch (\Exception $e) {
             $id = isset($process) ? $process->transactionId : null;
-            $this->log('Failed on callback transaction: ' . ((string) $e), 'error', $id, [
+            $this->log('Failed on callback transaction: ' . ((string) $e), Logger::LEVEL_ERROR, $id, [
                 'gatewayName' => $gatewayName,
                 'request' => $request,
                 'exception' => $e,
             ]);
             throw $e;
         }
+
+        $id = isset($process) ? $process->transactionId : null;
+        $this->log('Callback transaction', Logger::LEVEL_INFO, $id, [
+            'gatewayName' => $gatewayName,
+            'request' => $request,
+        ]);
 
         switch ($process->state) {
             case State::COMPLETE:
@@ -206,34 +210,18 @@ class GatewayModule extends Module
     }
 
     /**
-     * @param Controller $controller
-     * @param Process $process
-     */
-    public function redirect(Controller $controller, Process $process) {
-
-    }
-
-    /**
      * @param string $message
-     * @param string $level
+     * @param integer $level
      * @param integer $transactionId
      * @param array $stateData
      * @throws \gateway\exceptions\GatewayException
      */
-    public function log($message, $level = 'log', $transactionId = null, $stateData = []) {
+    public function log($message, $level = Logger::LEVEL_INFO, $transactionId = null, $stateData = []) {
         $message .= "\n" .
-            "Date: " . date('Y-m-d H:i:s') . "\n" .
-            "Level: " . $level . "\n" .
             "Transaction: " . $transactionId . "\n" .
             "State: " . print_r($stateData, true) . "\n\n" .
             "------------------------------------------\n\n";
-        file_put_contents(\Yii::getAlias($this->logFilePath), $message, FILE_APPEND);
-
-        $this->trigger(self::EVENT_LOG, new LogEvent([
-            'transactionId' => $transactionId,
-            'request' => isset($stateData['request']) ? $stateData['request'] : null,
-            'message' => $message,
-        ]));
+        \Yii::getLogger()->log($message, $level, 'gateway');
     }
 
     /**
@@ -264,7 +252,13 @@ class GatewayModule extends Module
 
     protected function coreComponents() {
         return [
-            'stateSaver' => ['class' => '\gateway\components\StateSaverFile'],
+            'stateSaver' => \Yii::$app->has('db') ?
+                [
+                    'class' => '\gateway\components\StateSaverDb',
+                    'tableName' => 'gateway_states'
+                ] : [
+                    'class' => '\gateway\components\StateSaverFile'
+                ],
         ];
     }
 

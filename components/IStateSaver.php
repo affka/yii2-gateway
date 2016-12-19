@@ -2,7 +2,8 @@
 
 namespace gateway\components;
 
-interface IStateSaver {
+interface IStateSaver
+{
 
     /**
      * @param string|int $id

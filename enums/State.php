@@ -2,8 +2,8 @@
 
 namespace gateway\enums;
 
-abstract class State {
-
+abstract class State
+{
     /**
      * Создано платежное поручение, но еще не отправлено в платежную систему
      */

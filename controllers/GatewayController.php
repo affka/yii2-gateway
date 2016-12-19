@@ -5,27 +5,40 @@ namespace gateway\controllers;
 use gateway\GatewayModule;
 use gateway\models\Request;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Html;
 use yii\web\Controller;
 
-class GatewayController extends Controller {
+class GatewayController extends Controller
+{
+    public $enableCsrfValidation = false;
 
-    public $enableCsrfValidation = false; // @todo Only for first time..
-
-    public function actionStart($gatewayName, $id, $amount, $description = '', $params = []) {
+    public function actionStart($gatewayName, $id, $amount, $description = '', array $params = [])
+    {
         $process = GatewayModule::getInstance()->start($gatewayName, $id, $amount, $description, $params);
+
         if ($process->request->method === 'get') {
-            $this->redirect((string) $process->request);
+            return $this->redirect((string)$process->request);
         } else {
-            // @todo post redirect
+            $html = '';
+            $html .= Html::beginForm($process->request->url, 'post', ['name' => 'redirectForm']);
+            foreach ($process->request->params as $key => $value) {
+                $html .= Html::hiddenInput($key, $value);
+            }
+            $html .= Html::endForm();
+            $html .= Html::script('document.redirectForm.submit()');
+
+            return $html;
         }
     }
 
-    public function actionCallback($gatewayName) {
+    public function actionCallback($gatewayName)
+    {
         $process = GatewayModule::getInstance()->callback($gatewayName, $this->getRequest());
         echo $process->responseText;
     }
 
-    public function actionSuccess($gatewayName) {
+    public function actionSuccess($gatewayName)
+    {
         $error = \Yii::$app->request->get('error');
         if ($error) {
             return $error;
@@ -35,7 +48,8 @@ class GatewayController extends Controller {
         //GatewayModule::getInstance()->end($gatewayName, true, $this->getRequest());
     }
 
-    public function actionFailure($gatewayName) {
+    public function actionFailure($gatewayName)
+    {
         // @todo
         //GatewayModule::getInstance()->end($gatewayName, false, $this->getRequest());
     }
@@ -43,7 +57,8 @@ class GatewayController extends Controller {
     /**
      * @return Request
      */
-    private function getRequest() {
+    protected function getRequest()
+    {
         /** @var \yii\web\Request $request */
         $request = \Yii::$app->request;
 

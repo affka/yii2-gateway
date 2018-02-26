@@ -2,7 +2,9 @@
 
 namespace gateway\enums;
 
-abstract class State
+use yii\base\Object;
+
+abstract class State extends Object
 {
     /**
      * Создано платежное поручение, но еще не отправлено в платежную систему

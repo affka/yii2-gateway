@@ -100,6 +100,7 @@ class YandexKassa extends Base
         ];
         if (!$request->hasParams($requiredParams)) {
             return new Process([
+                'transactionId' => $request->params['orderNumber'],
                 'result' => Result::ERROR,
                 'responseText' => $this->getXml($request, 200),
             ]);
@@ -119,6 +120,7 @@ class YandexKassa extends Base
         $remoteMD5 = strtolower($request->params['md5']);
         if ($md5 !== $remoteMD5) {
             return new Process([
+                'transactionId' => $request->params['orderNumber'],
                 'result' => Result::ERROR,
                 'responseText' => $this->getXml($request, 1),
             ]);
@@ -132,12 +134,14 @@ class YandexKassa extends Base
                 // Check order exists and state
                 if ($state === null || $state !== State::WAIT_VERIFICATION) {
                     return new Process([
+                        'transactionId' => $request->params['orderNumber'],
                         'result' => Result::ERROR,
                         'responseText' => $this->getXml($request, 100),
                     ]);
                 }
 
                 return new Process([
+                    'transactionId' => $request->params['orderNumber'],
                     'state' => State::WAIT_RESULT,
                     'result' => Result::SUCCEED,
                     'outsideTransactionId' => (string) $request->params['invoiceId'],
@@ -148,12 +152,14 @@ class YandexKassa extends Base
                 // Check order exists and state
                 if ($state === null || !in_array($state, [State::WAIT_VERIFICATION, State::WAIT_RESULT])) {
                     return new Process([
+                        'transactionId' => $request->params['orderNumber'],
                         'result' => Result::ERROR,
                         'responseText' => $this->getXml($request, 100),
                     ]);
                 }
 
                 return new Process([
+                    'transactionId' => $request->params['orderNumber'],
                     'state' => State::COMPLETE,
                     'result' => Result::SUCCEED,
                     'outsideTransactionId' => (string) $request->params['invoiceId'],
@@ -163,6 +169,7 @@ class YandexKassa extends Base
 
         // Send success result
         return new Process([
+            'transactionId' => $request->params['orderNumber'],
             'result' => Result::ERROR,
             'responseText' => $this->getXml($request, 200),
         ]);

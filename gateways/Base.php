@@ -128,6 +128,6 @@ abstract class Base extends Object
 
     protected function findOrderStateById($id) {
         $className = $this->module->orderClassName;
-        return class_exists($className) && $className::findOrderStateById($id);
+        return class_exists($className) ? $className::findOrderStateById($id) : null;
     }
 }

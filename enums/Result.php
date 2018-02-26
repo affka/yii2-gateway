@@ -2,11 +2,13 @@
 
 namespace gateway\enums;
 
+use yii\base\Object;
+
 /**
  * Результат обработки события в платёжной системе
  * @author Vladimir Kozhin <affka@affka.ru>
  */
-abstract class Result
+abstract class Result extends Object
 {
     /**
      * Платежное поручение, поданное платежной системой в нашу на проверку, не подтверждено

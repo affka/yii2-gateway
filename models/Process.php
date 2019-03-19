@@ -2,9 +2,9 @@
 
 namespace gateway\models;
 
-use yii\base\Object;
+use yii\base\BaseObject;
 
-class Process extends Object
+class Process extends BaseObject
 {
 
     /**

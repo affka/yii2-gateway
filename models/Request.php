@@ -2,9 +2,9 @@
 
 namespace gateway\models;
 
-use yii\base\Object;
+use yii\base\BaseObject;
 
-class Request extends Object
+class Request extends BaseObject
 {
 
     public $url;

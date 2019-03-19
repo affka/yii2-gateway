@@ -4,14 +4,14 @@ namespace gateway\gateways;
 
 use gateway\GatewayModule;
 use gateway\models\Request;
-use yii\base\Object;
+use yii\base\BaseObject;
 use yii\log\Logger;
 
 /**
  * Class Base
  * @package gateway\gateways
  */
-abstract class Base extends Object
+abstract class Base extends BaseObject
 {
 
     /**

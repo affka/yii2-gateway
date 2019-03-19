@@ -2,14 +2,14 @@
 
 namespace gateway\models;
 
-use yii\base\Object;
+use yii\base\BaseObject;
 
 /**
  * Модель для парсинга и формирования ссылки
  *
  * @author affka
  */
-class Link extends Object
+class Link extends BaseObject
 {
 
     public $protocol;

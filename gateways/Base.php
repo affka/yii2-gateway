@@ -61,6 +61,15 @@ abstract class Base extends BaseObject
     abstract public function callback(Request $request);
 
     /**
+     * @param Request $request
+     * @return string|null
+     */
+    public function resolveTransactionId(Request $request)
+    {
+        return null;
+    }
+
+    /**
      * Адрес магазина/сайта
      * @return string
      */

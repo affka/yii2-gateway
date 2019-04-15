@@ -107,4 +107,9 @@ class Robokassa extends Base
         ]);
     }
 
+    public function resolveTransactionId(Request $request)
+    {
+        return !empty($request->params['InvId']) ? $request->params['InvId'] : null;
+    }
+
 }

@@ -119,14 +119,16 @@ class GatewayModule extends Module
             $this->gateways[$name]['class'] = $this->gateways[$name];
         }
 
-        // Lazy create
-        $this->gateways[$name] = \Yii::createObject(array_merge($this->gateways[$name], [
-            'name' => $name,
-            'module' => $this,
-            'class' => isset($this->gateways[$name]['class']) ?
-                $this->gateways[$name]['class'] :
-                $this->getGatewayClassByName($name),
-        ]));
+        if (!is_object($this->gateways[$name])) {
+            // Lazy create
+            $this->gateways[$name] = \Yii::createObject(array_merge($this->gateways[$name], [
+                'name' => $name,
+                'module' => $this,
+                'class' => isset($this->gateways[$name]['class']) ?
+                    $this->gateways[$name]['class'] :
+                    $this->getGatewayClassByName($name),
+            ]));
+        }
 
         return $this->gateways[$name];
     }

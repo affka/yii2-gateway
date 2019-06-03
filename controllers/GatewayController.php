@@ -67,6 +67,7 @@ class GatewayController extends Controller
             'method' => $request->method,
             'url' => $request->hostInfo . $port . str_replace('?' . $request->queryString, '', $request->url),
             'params' => ArrayHelper::merge($request->get(), $request->post()),
+            'headers' => $request->headers->toArray(),
         ]);
     }
 }

@@ -10,6 +10,7 @@ class Request extends BaseObject
     public $url;
     public $method = 'get';
     public $params = [];
+    public $headers = [];
 
     /**
      * @param array|string $params

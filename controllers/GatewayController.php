@@ -7,6 +7,7 @@ use gateway\models\Request;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\web\Controller;
+use yii\web\Response;
 
 class GatewayController extends Controller
 {
@@ -34,7 +35,8 @@ class GatewayController extends Controller
     public function actionCallback($gatewayName)
     {
         $process = GatewayModule::getInstance()->callback($gatewayName, $this->getRequest());
-        echo $process->responseText;
+        \Yii::$app->response->format = Response::FORMAT_RAW;
+        return $process->responseText;
     }
 
     public function actionSuccess($gatewayName)

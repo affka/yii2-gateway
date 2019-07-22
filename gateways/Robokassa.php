@@ -45,6 +45,8 @@ class Robokassa extends Base
         // Additional params
         $shpParams = [];
         $shpSignature = '';
+        // params should be ordered by alphabet in MD5 signature
+        ksort($params);
         foreach ($params as $key => $value) {
             $shpParams['Shp_' . $key] = $value;
             $shpSignature .= ':Shp_' . $key . '=' . $value;

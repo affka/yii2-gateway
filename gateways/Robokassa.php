@@ -103,6 +103,7 @@ class Robokassa extends Base
 
         // Send success result
         return new Process([
+            'transactionId' => $transactionId,
             'state' => State::COMPLETE,
             'result' => Result::SUCCEED,
             'responseText' => 'OK' . $transactionId,

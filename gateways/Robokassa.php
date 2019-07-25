@@ -42,15 +42,8 @@ class Robokassa extends Base
      */
     public function start($id, $amount, $description, $params)
     {
-        // Additional params
-        $shpParams = [];
-        $shpSignature = '';
-        // params should be ordered by alphabet in MD5 signature
-        ksort($params);
-        foreach ($params as $key => $value) {
-            $shpParams['Shp_' . $key] = $value;
-            $shpSignature .= ':Shp_' . $key . '=' . $value;
-        }
+        $shpParams = self::getShpParams($params);
+        $shpSignature = self::getShpSignatureBase($params);
 
         // Remote url
         $url = $this->url ?: ($this->testMode ? 'http://test.robokassa.ru/Index.aspx' : 'http://auth.robokassa.ru/Merchant/Index.aspx');
@@ -87,17 +80,22 @@ class Robokassa extends Base
             throw new InvalidArgumentException('Invalid request arguments. Need `InvId` and `SignatureValue`.');
         }
 
-        // Find transaction model
-        $transactionId = (int)$request->params['InvId'];
-
         // @todo check transaction exists
+        // Find transaction model
+        $transactionId = $request->params['InvId'];
+
+        $shpParams = array_filter($request->params, function($key){
+            return preg_match('/Shp_.*/', $key);
+        }, ARRAY_FILTER_USE_KEY);
+
+        $shpSignature = self::getShpSignatureBase($shpParams, false);
 
         // Generate hash sum
-        $md5 = strtoupper(md5($request->params['OutSum'] . ':' . $transactionId . ':' . $this->password2));
+        $md5 = strtoupper(md5($this->login . ':' . $request->params['OutSum'] . ':' . $transactionId . ':' . $this->password2 . $shpSignature));
         $remoteMD5 = $request->params['SignatureValue'];
 
         // Check md5 hash
-        if ($md5 !== $remoteMD5) {
+        if ($md5 != $remoteMD5) {
             throw new SignatureMismatchRequestException();
         }
 
@@ -113,6 +111,48 @@ class Robokassa extends Base
     public function resolveTransactionId(Request $request)
     {
         return !empty($request->params['InvId']) ? $request->params['InvId'] : null;
+    }
+
+    /**
+     * Formats request params by Robokassa's requirements.
+     * @param array $params
+     * @return array
+     */
+    private static function getShpParams($params) {
+        // Additional params
+        $shpParams = [];
+
+        if ($params) {
+            foreach ($params as $key => $value) {
+                $shpParams['Shp_' . $key] = $value;
+            }
+        }
+
+        return $shpParams;
+    }
+
+    /**
+     * Calculates a string which should be added to signature base if a request to Robakassa was made with params.
+     * @see https://docs.robokassa.ru/#1250
+     * @param array $params
+     * @return string
+     */
+    private static function getShpSignatureBase($params, $needFormatting = true) {
+        if ($needFormatting) {
+            $params = self::getShpParams($params);
+        }
+
+        $shpSignatureBase = '';
+
+        if ($params) {
+            // params should be ordered by alphabet in MD5 signature
+            ksort($params);
+            foreach ($params as $key => $value) {
+                $shpSignatureBase .= ':' . $key . '=' . $value;
+            }
+        }
+
+        return $shpSignatureBase;
     }
 
 }

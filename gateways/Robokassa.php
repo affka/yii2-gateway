@@ -91,7 +91,7 @@ class Robokassa extends Base
         $shpSignature = self::getShpSignatureBase($shpParams, false);
 
         // Generate hash sum
-        $md5 = strtoupper(md5($this->login . ':' . $request->params['OutSum'] . ':' . $transactionId . ':' . $this->password2 . $shpSignature));
+        $md5 = strtoupper(md5($request->params['OutSum'] . ':' . $transactionId . ':' . $this->password2 . $shpSignature));
         $remoteMD5 = $request->params['SignatureValue'];
 
         // Check md5 hash

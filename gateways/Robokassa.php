@@ -8,6 +8,7 @@ use gateway\exceptions\InvalidArgumentException;
 use gateway\exceptions\SignatureMismatchRequestException;
 use gateway\models\Process;
 use gateway\models\Request;
+use yii\helpers\ArrayHelper;
 
 class Robokassa extends Base
 {

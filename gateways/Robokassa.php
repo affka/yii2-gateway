@@ -59,7 +59,7 @@ class Robokassa extends Base
                     'InvId' => $id,
                     'Desc' => $description,
                     'SignatureValue' => md5($this->login . ":" . $amount . ":" . $id . ":" . $this->password1 . $shpSignature),
-                    'IncCurrLabel' => $this->paymentMethod,
+                    'IncCurrLabel' => ArrayHelper::getValue($params, 'paymentMethod') ?: $this->paymentMethod,
                     'Culture' => 'ru',
                     'Encoding' => 'utf-8',
                 ]),

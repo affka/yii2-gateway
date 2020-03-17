@@ -47,7 +47,7 @@ class Robokassa extends Base
         $shpSignature = self::getShpSignatureBase($params);
 
         // Remote url
-        $url = $this->url ?: ($this->testMode ? 'http://test.robokassa.ru/Index.aspx' : 'http://auth.robokassa.ru/Merchant/Index.aspx');
+        $url = $this->url ?: ($this->testMode ? 'https://test.robokassa.ru/Index.aspx' : 'https://auth.robokassa.ru/Merchant/Index.aspx');
 
         return new Process([
             'state' => State::WAIT_VERIFICATION,
